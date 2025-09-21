@@ -1,8 +1,8 @@
 # database.py
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, sessionmaker
 
 # Database setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///./database.db"
@@ -24,6 +24,7 @@ class Problem(Base):
     
     # Relationship to reviews
     reviews = relationship("Review", back_populates="problem")
+    due = relationship("Due", back_populates="problem")
 
 class Review(Base):
     __tablename__ = "reviews"
@@ -35,6 +36,16 @@ class Review(Base):
     
     # Relationship to problem
     problem = relationship("Problem", back_populates="reviews")
+
+class Due(Base):
+    __tablename__ = "due"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    problem_id = Column(Integer, ForeignKey("problems.id"))
+    due_date = Column(DateTime)
+    
+    # Relationship to problem
+    problem = relationship("Problem", back_populates="due")
 
 # Create tables
 def create_tables():

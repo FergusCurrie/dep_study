@@ -1,18 +1,21 @@
 
-from fastapi import FastAPI
+from database import Due as DueModel
+from database import Problem as ProblemModel
+from database import Review as ReviewModel
+from database import create_tables, get_db
+from datetime import datetime
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from src.problems.dispatch import dispatch_problem
-from fastapi import Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List
-from database import get_db, create_tables, Problem as ProblemModel, Review as ReviewModel
-from schemas import Problem, ProblemCreate, Review, ReviewCreate, ProblemWithReviews
-import random 
-from loguru import logger 
-from pathlib import Path
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
+from fastapi.staticfiles import StaticFiles
+from loguru import logger
+from pathlib import Path
+from schemas import Problem, ProblemCreate, ProblemWithReviews, Review, ReviewCreate
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+from src.problems.dispatch import dispatch_problem
+from src.scheduling.simple import get_next_review_date
+from typing import List
 
 app = FastAPI()
 
@@ -63,9 +66,21 @@ def create_problem(problem: ProblemCreate, db: Session = Depends(get_db)):
 
 @app.get("/api/problems/")
 def read_problems(db: Session = Depends(get_db)):
-    problems = db.query(ProblemModel).all()
-    problem = random.choice(problems)
-    logger.info(f'Read problems! - found {len(problems)}, select {problem.name}')
+    query = (
+        db.query(DueModel, ProblemModel)
+        .outerjoin(DueModel, ProblemModel.id == DueModel.problem_id)
+        .filter(
+            or_(
+                DueModel.due_date == None,          
+                DueModel.due_date <= datetime.now()     
+            )
+    )
+    )
+    problems_and_due = query.all() 
+    if len(problems_and_due) == 0:
+        return {}
+    _, problem = problems_and_due[0]
+    logger.info(f'Read problems! - found {len(problems_and_due)}, select {problem.name}')
     problem_data = dispatch_problem(problem.name)
     problem_data['id'] = problem.id
     return problem_data
@@ -98,6 +113,27 @@ def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
     db.add(db_review)
     db.commit()
     db.refresh(db_review)
+
+    # find new due date 
+    try:
+        all_reviews = db.query(ReviewModel).filter(ReviewModel.problem_id == review.problem_id).all()
+        next_review_date = get_next_review_date(all_reviews)
+
+        # Delete old due date 
+        current_due = db.query(DueModel).filter(DueModel.problem_id == review.problem_id).first()
+        if current_due:
+            current_due.due_date = next_review_date  
+            logger.info(f'Updated due date to {current_due.due_date}')
+        else:
+            current_due = DueModel(due_date=next_review_date, problem_id=review.problem_id)
+            db.add(current_due)
+            logger.info(f'Created new due date {current_due.due_date}')
+
+        db.commit()
+        db.refresh(current_due)
+    except Exception as e:
+        logger.error(f'Found {e}')
+    # logger.info(db_review)
     return db_review
 
 @app.get("/api/reviews/", response_model=List[Review])

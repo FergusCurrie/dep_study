@@ -1,5 +1,5 @@
 
-import random 
+import random
 from jinja2 import Environment, FileSystemLoader
 
 

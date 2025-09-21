@@ -24,7 +24,7 @@ function Practice() {
   };
 
   const addReview = async (isCorrect: boolean) => {
-    const response = await api.post("/reviews/", {
+    const response = await api.post("/api/reviews/", {
       problem_id: currentProblem?.id,
       correct: isCorrect,
     });

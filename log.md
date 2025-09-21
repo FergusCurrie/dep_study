@@ -3,3 +3,4 @@
 - initalised app
 - basic backend / frontend interaction
 - simple problem gen
+- basic docker build 
