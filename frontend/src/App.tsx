@@ -51,14 +51,14 @@ function App() {
             onClick={() => {
               setSelectedTab(item.id);
             }}
-            sx={{
-              borderRadius: 1,
-              mb: 0.5,
-              "&.Mui-selected": {
-                bgcolor: "primary.light",
-                color: "primary.contrastText",
-              },
-            }}
+            // sx={{
+            //   borderRadius: 1,
+            //   mb: 0.5,
+            //   "&.Mui-selected": {
+            //     bgcolor: "primary.light",
+            //     color: "primary.contrastText",
+            //   },
+            // }}
           >
             <ListItemIcon
               sx={{

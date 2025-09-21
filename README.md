@@ -14,3 +14,8 @@ React + mui renders the problem for solving.
 3. Add python file to `src/problems/<name>.py` with logic for generating question data + solving. 
 4. Use `manual_db.py` to add to problem database
 5. Update `src/problems/dispatch.py` to correctly dispatch name to problem generation
+
+
+## Build 
+
+docker build -t test-app-build .
