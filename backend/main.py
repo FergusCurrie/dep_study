@@ -16,7 +16,7 @@ app.add_middleware(
 practiceProblems = [
   {
     'id': 1,
-    'question': "Solve for x: 2x + 5 = 13",
+    'question': "Here's Einstein's famous equation: ($E = mc^2$)",
     'options': ["x = 4", "x = 6", "x = 8", "x = 9"],
     'correct': 0,
     'category': "Algebra"

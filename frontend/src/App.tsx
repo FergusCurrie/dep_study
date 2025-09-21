@@ -1,98 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
-  AppBar,
-  Toolbar,
   Typography,
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
   Button,
-  LinearProgress,
   Box,
-  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  Avatar,
   IconButton,
-  Drawer,
-  useTheme,
-  useMediaQuery
 } from '@mui/material';
 import {
-  School,
-  TrendingUp,
-  CheckCircle,
   PlayArrow,
-  MenuBook,
-  Assessment,
-  Menu,
   Close,
-  Star,
-  Timer,
-  Functions
 } from '@mui/icons-material';
-
+import MarkdownMathRenderer from './components/MarkdownMathRenderer.tsx'
 import api from './api'
-// const Diag = ({}) => {
-  
-//   return (
-    
-//   )
-// }
-
-const courses = [
-  {
-    id: 1,
-    title: "Algebra Fundamentals",
-    description: "Master the basics of algebraic expressions and equations",
-    progress: 75,
-    totalLessons: 24,
-    completedLessons: 18,
-    difficulty: "Beginner",
-    category: "Algebra"
-  },
-  {
-    id: 2,
-    title: "Geometry Essentials",
-    description: "Explore shapes, angles, and spatial relationships",
-    progress: 45,
-    totalLessons: 20,
-    completedLessons: 9,
-    difficulty: "Intermediate",
-    category: "Geometry"
-  },
-  {
-    id: 3,
-    title: "Calculus I",
-    description: "Introduction to limits, derivatives, and integrals",
-    progress: 30,
-    totalLessons: 32,
-    completedLessons: 10,
-    difficulty: "Advanced",
-    category: "Calculus"
-  },
-  {
-    id: 4,
-    title: "Statistics & Probability",
-    description: "Data analysis and probability theory fundamentals",
-    progress: 60,
-    totalLessons: 18,
-    completedLessons: 11,
-    difficulty: "Intermediate",
-    category: "Statistics"
-  }
-];
 
 // Sample practice problems
 
@@ -149,7 +71,7 @@ function App() {
     setSelectedAnswer(-1);
     setShowResult(false);
   };
-
+  const sampleContent = `Here's Einstein's famous equation: ($E = mc^2$)`
   const logProb = () => {
     console.log('test')
     console.log(currentProblem)
@@ -187,9 +109,8 @@ function App() {
         <DialogContent>
           {currentProblem && (
             <Box>
-              <Typography variant="h6" gutterBottom>
-                {currentProblem.question}
-              </Typography>
+              <MarkdownMathRenderer content={currentProblem.question}></MarkdownMathRenderer>
+
               <Box sx={{ mt: 2 }}>
                 {currentProblem.options.map((option, index) => (
                   <Box key={index} sx={{ mb: 1 }}>

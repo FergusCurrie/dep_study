@@ -1,0 +1,19 @@
+.katex {
+  font-family: KaTeX_Main, "Times New Roman", serif;
+  font-size: 1.21em;
+  line-height: 1.2;
+  text-indent: 0;
+}
+.katex-display {
+  display: block;
+  margin: 1em 0;
+  text-align: center;
+}
+.katex-display .katex {
+  display: block;
+  text-align: center;
+  white-space: nowrap;
+}
+.katex .base {
+  display: inline-block;
+}
