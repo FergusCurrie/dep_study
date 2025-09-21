@@ -15,7 +15,7 @@ const Progress = () => {
   let [reviews, setReviews] = useState<Array<Review> | null>(null);
 
   const getReviews = async () => {
-    const response = await api.get("/reviews/");
+    const response = await api.get("/api/reviews/");
     setReviews(response.data);
   };
 
