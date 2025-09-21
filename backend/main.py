@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from src.bytes2bits import generate_problem
 app = FastAPI()
 
 
@@ -13,24 +14,8 @@ app.add_middleware(
     expose_headers=["*"],  # Add this line
 )
 
-practiceProblems = [
-  {
-    'id': 1,
-    'question': "Here's Einstein's famous equation: ($E = mc^2$)",
-    'options': ["x = 4", "x = 6", "x = 8", "x = 9"],
-    'correct': 0,
-    'category': "Algebra"
-  },
-  {
-    'id': 2,
-    'question': "What is the area of a circle with radius 3?",
-    'options': ["6π", "9π", "12π", "18π"],
-    'correct': 1,
-    'category': "Geometry"
-  },
-]
 
 @app.get("/")
 def read_root():
-    return {"problem": practiceProblems[0]}
+    return {"problem": generate_problem()}
 

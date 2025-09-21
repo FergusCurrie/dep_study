@@ -20,11 +20,9 @@ import api from './api'
 
 
 interface Problem {
-  id: number;
   question: string;
   options: string[];
   correct: number;
-  category: string;
 }
 
 
@@ -41,7 +39,7 @@ function App() {
 
   const getQuestion = async () => {
         const response = await api.get('/')
-        // console.log(response)
+        console.log(response)
         setCurrentProblem(response.data.problem)
     }
 
@@ -66,16 +64,11 @@ function App() {
   };
 
   const nextProblem = () => {
-    //const randomProblem = practiceProblems[Math.floor(Math.random() * practiceProblems.length)];
-    //setCurrentProblem(randomProblem);
+    getQuestion()
     setSelectedAnswer(-1);
     setShowResult(false);
   };
-  const sampleContent = `Here's Einstein's famous equation: ($E = mc^2$)`
-  const logProb = () => {
-    console.log('test')
-    console.log(currentProblem)
-  }
+
   return (
     
 
@@ -88,8 +81,6 @@ function App() {
             >
               Quick Practice
             </Button>
-
-      <Button onClick={logProb}>Check problem</Button>
 
       <Dialog
         open={practiceDialog}
