@@ -13,5 +13,8 @@ COPY backend .
 RUN uv sync 
 
 # Get fronend 
-COPY --from=frontend-build /app/frontend/dist ./static
+COPY --from=frontend-build /app/frontend/dist ./dist
 EXPOSE 8000
+
+
+CMD ["uv", "run", "main.py"]

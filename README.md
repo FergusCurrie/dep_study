@@ -19,3 +19,4 @@ React + mui renders the problem for solving.
 ## Build 
 
 docker build -t test-app-build .
+docker run -p 8000:8000 test-app-build
