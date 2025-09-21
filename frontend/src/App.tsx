@@ -1,173 +1,134 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from "react";
 import {
+  AppBar,
+  Toolbar,
   Typography,
-  Button,
+  Container,
   Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Avatar,
   IconButton,
-} from '@mui/material';
+} from "@mui/material";
 import {
-  PlayArrow,
-  Close,
-} from '@mui/icons-material';
-import MarkdownMathRenderer from './components/MarkdownMathRenderer.tsx'
-import api from './api'
-
-// Sample practice problems
-
-
-interface Problem {
-  id: int;
-  question: string;
-  options: string[];
-  correct: number;
-}
-
-
+  School,
+  TrendingUp,
+  Assessment,
+  Menu,
+  Functions,
+} from "@mui/icons-material";
+import Practice from "./page/Practice.tsx";
+import Progress from "./page/Progress.tsx";
 
 function App() {
+  const [selectedTab, setSelectedTab] = useState("practice");
 
+  const menuItems = [
+    { id: "practice", label: "Practice", icon: <Functions /> },
+    { id: "dashboard", label: "Dashboard", icon: <Assessment /> },
+    { id: "progress", label: "Progress", icon: <TrendingUp /> },
+  ];
 
-  const [practiceDialog, setPracticeDialog] = useState(false);
-  const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
-  const [selectedAnswer, setSelectedAnswer] = useState(-1);
-  const [showResult, setShowResult] = useState(false);
-  const [score, setScore] = useState(0);
-  const [problemsAttempted, setProblemsAttempted] = useState(0);
+  const Sidebar = () => (
+    <Box sx={{ width: 250, p: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+        <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
+          <School />
+        </Avatar>
+        <Typography variant="h6" color="primary">
+          Dep practice
+        </Typography>
+      </Box>
+      <List>
+        {menuItems.map((item) => (
+          <ListItem
+            button
+            key={item.id}
+            selected={selectedTab === item.id}
+            onClick={() => {
+              setSelectedTab(item.id);
+            }}
+            sx={{
+              borderRadius: 1,
+              mb: 0.5,
+              "&.Mui-selected": {
+                bgcolor: "primary.light",
+                color: "primary.contrastText",
+              },
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                color:
+                  selectedTab === item.id ? "primary.contrastText" : "inherit",
+              }}
+            >
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText primary={item.label} />
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
 
-  const getQuestion = async () => {
-      const response = await api.get('/problems/')
-      console.log(response)
-      setCurrentProblem(response.data)
-  }
-
-  const addReview = async (isCorrect: boolean) => {
-      const response = await api.post('/reviews/', {'problem_id' : currentProblem?.id, 'correct' : isCorrect})
-  }
-
-  useEffect(() => {
-    getQuestion()
-  }, [])
-
-  const startPractice = () => {
-    //const randomProblem = practiceProblems[Math.floor(Math.random() * practiceProblems.length)];
-    //setCurrentProblem(randomProblem);
-    setSelectedAnswer(-1);
-    setShowResult(false);
-    setPracticeDialog(true);
-  };
-
-  const handleAnswerSubmit = () => {
-    if (selectedAnswer === currentProblem?.correct) {
-      addReview(true)
-      setScore(score + 1);
-    }else{
-      addReview(false)
+  const renderContent = () => {
+    switch (selectedTab) {
+      case "dashboard":
+        return <Typography variant="h1">Place holder for dashboard</Typography>;
+      case "practice":
+        return <Practice />;
+      case "progress":
+        return <Progress />;
+      default:
+        return <Practice />;
     }
-    
-    setProblemsAttempted(problemsAttempted + 1);
-    setShowResult(true);
-  };
-
-  const nextProblem = () => {
-    
-    getQuestion()
-    setSelectedAnswer(-1);
-    setShowResult(false);
   };
 
   return (
-    
-
     <>
-      <Button
-              variant="contained"
-              startIcon={<PlayArrow />}
-              onClick={startPractice}
-              size="large"
-            >
-              Quick Practice
-            </Button>
+      <Box sx={{ display: "flex" }}>
+        {/* Sidebar */}
+        <Paper
+          elevation={1}
+          sx={{
+            width: 250,
+            flexShrink: 0,
+            borderRadius: 0,
+            borderRight: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Sidebar />
+        </Paper>
 
-      <Dialog
-        open={practiceDialog}
-        onClose={() => setPracticeDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          Practice Problem
-          <IconButton
-            onClick={() => setPracticeDialog(false)}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          {currentProblem && (
-            <Box>
-              <MarkdownMathRenderer content={currentProblem.question}></MarkdownMathRenderer>
-
-              <Box sx={{ mt: 2 }}>
-                {currentProblem.options.map((option, index) => (
-                  <Box key={index} sx={{ mb: 1 }}>
-                    <Button
-                      variant={selectedAnswer === index ? "contained" : "outlined"}
-                      fullWidth
-                      onClick={() => setSelectedAnswer(index)}
-                      disabled={showResult}
-                      color={
-                        showResult
-                          ? index === currentProblem.correct
-                            ? "success"
-                            : selectedAnswer === index
-                            ? "error"
-                            : "inherit"
-                          : "primary"
-                      }
-                    >
-                      {option}
-                    </Button>
-                  </Box>
-                ))}
-              </Box>
-              {showResult && (
-                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                  <Typography variant="body2">
-                    {selectedAnswer === currentProblem.correct
-                      ? "🎉 Correct! Well done!"
-                      : "❌ Incorrect. The correct answer is: " + currentProblem.options[currentProblem.correct]
-                    }
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          {!showResult ? (
-            <Button
-              onClick={handleAnswerSubmit}
-              variant="contained"
-              disabled={selectedAnswer === null}
-            >
-              Submit Answer
-            </Button>
-          ) : (
-            <Button onClick={nextProblem} variant="contained">
-              Next Problem
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
+        {/* Main Content */}
+        <Box
+          component="main"
+          sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+        >
+          {/* App bar */}
+          <AppBar position="static" elevation={1}>
+            <Toolbar>
+              <IconButton edge="start" color="inherit" sx={{ mr: 2 }}>
+                <Menu />
+              </IconButton>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                Ferg practice
+              </Typography>
+            </Toolbar>
+          </AppBar>
+          {/* Conditional render */}
+          <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
+            {renderContent()}
+          </Container>
+        </Box>
+      </Box>
     </>
-  )
+  );
 }
 
-export default App
-
-
+export default App;

@@ -15,7 +15,6 @@ import ReactDOM from 'react-dom/client'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import App from './App.jsx'
-import MarkdownMathRenderer from './components/MarkdownMathRenderer.tsx'
 
 // Create a custom theme (optional)
 const theme = createTheme({
@@ -39,7 +38,7 @@ const theme = createTheme({
 // Here's Einstein's famous equation: $E = mc^2$,`
 
 //const sampleContent = `The lift coefficient ($C_L$) is a dimensionless coefficient.`
-const sampleContent = `Here's Einstein's famous equation: ($E = mc^2$)`
+
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

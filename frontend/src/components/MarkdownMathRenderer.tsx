@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from 'react';
+
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-// Note: In your actual app, you'll need to install and import KaTeX CSS:
-// import 'katex/dist/katex.min.css';
 
-// For this demo, we'll add KaTeX CSS via a style tag
 const katexCSS = `
 .katex {
   font-family: KaTeX_Main, "Times New Roman", serif;
@@ -28,7 +25,7 @@ const katexCSS = `
 }
 `;
 
-// Custom components for styling markdown elements (Material-UI style)
+
 const MarkdownComponents = {
   h1: ({ children }) => (
     <h1 style={{ 

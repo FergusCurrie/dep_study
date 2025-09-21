@@ -8,6 +8,7 @@ from typing import List
 from database import get_db, create_tables, Problem as ProblemModel, Review as ReviewModel
 from schemas import Problem, ProblemCreate, Review, ReviewCreate, ProblemWithReviews
 import random 
+from loguru import logger 
 
 app = FastAPI()
 
@@ -36,9 +37,10 @@ def create_problem(problem: ProblemCreate, db: Session = Depends(get_db)):
     return db_problem
 
 @app.get("/problems/")
-def read_problems(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    problems = db.query(ProblemModel).offset(skip).limit(limit).all()
+def read_problems(db: Session = Depends(get_db)):
+    problems = db.query(ProblemModel).all()
     problem = random.choice(problems)
+    logger.info(f'Read problems! - found {len(problems)}, select {problem.name}')
     problem_data = dispatch_problem(problem.name)
     problem_data['id'] = problem.id
     return problem_data
