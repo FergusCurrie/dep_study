@@ -20,6 +20,7 @@ import api from './api'
 
 
 interface Problem {
+  id: int;
   question: string;
   options: string[];
   correct: number;
@@ -38,10 +39,14 @@ function App() {
   const [problemsAttempted, setProblemsAttempted] = useState(0);
 
   const getQuestion = async () => {
-        const response = await api.get('/')
-        console.log(response)
-        setCurrentProblem(response.data.problem)
-    }
+      const response = await api.get('/problems/')
+      console.log(response)
+      setCurrentProblem(response.data)
+  }
+
+  const addReview = async (isCorrect: boolean) => {
+      const response = await api.post('/reviews/', {'problem_id' : currentProblem?.id, 'correct' : isCorrect})
+  }
 
   useEffect(() => {
     getQuestion()
@@ -57,13 +62,18 @@ function App() {
 
   const handleAnswerSubmit = () => {
     if (selectedAnswer === currentProblem?.correct) {
+      addReview(true)
       setScore(score + 1);
+    }else{
+      addReview(false)
     }
+    
     setProblemsAttempted(problemsAttempted + 1);
     setShowResult(true);
   };
 
   const nextProblem = () => {
+    
     getQuestion()
     setSelectedAnswer(-1);
     setShowResult(false);
