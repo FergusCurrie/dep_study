@@ -18,7 +18,7 @@ function Practice() {
   const [problemsAttempted, setProblemsAttempted] = useState(0);
 
   const getQuestion = async () => {
-    const response = await api.get("/problems/");
+    const response = await api.get("/api/problems/");
     console.log(response);
     setCurrentProblem(response.data);
   };
