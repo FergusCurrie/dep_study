@@ -17,3 +17,41 @@ dependencies = [
 
 [tool.poe.tasks]
 run = "uv run fastapi dev main.py"
+
+ 
+[tool.ruff]
+line-length = 120
+exclude = ['src/utils/db_functions.py']
+ 
+ 
+[tool.ruff.lint]
+select = [
+    "E", # pep8
+    "F", # flake8 (base)
+    "B", # flake8-bugbear
+    "SIM", # flake8-simplify -> better ways to code thing
+    "I", # flake8-imports: check order and formatting according to pep8
+    #"D", # flake8-docstrings
+    "T", # flake8-print - check for print statements left in code
+    "N", # pep8-naming,
+    "ANN", # flake8-annotations
+    "PD", # pandas-vet
+    "C", #flakeu-comprehensions
+    "PT", # flake8-pytest-style
+    "RET", # flake8-return
+    "TD", # flake8-todos
+    "TCH", # flake8-type-checking
+    "FBT", # flake8-boolean-trap
+]  
+ignore = ["D104"] # ignore docstring in __init__.py
+ 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+ 
+[tool.ruff.format]
+line-ending = "lf"
+skip-magic-trailing-comma = true
+ 
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+no-sections = true

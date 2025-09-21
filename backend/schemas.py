@@ -1,6 +1,8 @@
-from pydantic import BaseModel
 from datetime import datetime
+from pydantic import BaseModel
 from typing import List
+
+### problem 
 
 class ProblemBase(BaseModel):
     name: str
@@ -15,6 +17,7 @@ class Problem(ProblemBase):
     class Config:
         from_attributes = True
 
+### review 
 class ReviewBase(BaseModel):
     problem_id: int
     correct: bool
@@ -29,5 +32,22 @@ class Review(ReviewBase):
     class Config:
         from_attributes = True
 
+
 class ProblemWithReviews(Problem):
     reviews: List[Review] = []
+
+### due 
+class DueBase(BaseModel):
+    problem_id: int
+    due_date: datetime 
+
+
+class DueCreate(DueBase):
+    pass
+
+class Due(DueBase):
+    id: int
+    
+    class Config:
+        from_attributes = True
+
