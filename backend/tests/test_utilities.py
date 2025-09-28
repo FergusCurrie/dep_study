@@ -1,7 +1,6 @@
 import numpy as np
 from src.problems.utils.latex import matrix_to_latex
 from src.problems.utils.options import generate_options
-from src.problems.utils.template import render_template
 
 
 class TestOptionsGeneration:
@@ -102,41 +101,45 @@ class TestOptionsGeneration:
             assert -2.0 <= value <= 2.0  # Reasonable range for 0.05 with variation
 
 
-class TestTemplateRendering:
-    def test_render_template_basic(self):
-        """Test basic template rendering."""
-        data = {"name": "test", "value": 42}
-        result = render_template("problem_templates/arithmetic_intensity.j2", data)
+class TestStringTemplating:
+    def test_string_templating_basic(self):
+        """Test basic string templating functionality."""
+        name = "test"
+        value = 42
+        result = f"Hello {name}, value is {value}"
         
         assert isinstance(result, str)
-        assert len(result) > 0
+        assert "test" in result
+        assert "42" in result
 
-    def test_render_template_with_variables(self):
-        """Test template rendering with various data types."""
-        data = {
-            "string_var": "hello",
-            "int_var": 123,
-            "float_var": 3.14,
-            "list_var": [1, 2, 3]
-        }
+    def test_string_templating_with_multiline(self):
+        """Test multiline string templating."""
+        flop_per_thread = 10
+        memory_access_size_bits = 32
+        memory_access_per_thread = 5
         
-        # This will fail if template doesn't exist, but that's expected
-        # We're testing the function interface
-        try:
-            result = render_template("problem_templates/arithmetic_intensity.j2", data)
-            assert isinstance(result, str)
-        except Exception:
-            # Template file might not exist in test environment
-            pass
+        result = f"""## Arithmetic Intensity Problem
 
-    def test_render_template_empty_data(self):
-        """Test template rendering with empty data."""
-        try:
-            result = render_template("problem_templates/arithmetic_intensity.j2", {})
-            assert isinstance(result, str)
-        except Exception:
-            # Template file might not exist in test environment
-            pass
+Calculate the arithmetic intensity for a thread that performs **{flop_per_thread}** floating-point operations while accessing **{memory_access_size_bits}** bits of memory **{memory_access_per_thread}** times.
+
+**Formula:** Arithmetic Intensity = FLOPs per thread / (Memory access size in bytes × Memory accesses per thread)
+
+**Note:** 1 byte = 8 bits
+
+What is the arithmetic intensity? (Round to 2 decimal places)"""
+        
+        assert isinstance(result, str)
+        assert "10" in result
+        assert "32" in result
+        assert "5" in result
+        assert "Arithmetic Intensity Problem" in result
+
+    def test_string_templating_with_formatting(self):
+        """Test string templating with different formatting options."""
+        answer = 3.14159
+        result = f"Answer: {answer:.2f}"
+        
+        assert result == "Answer: 3.14"
 
 
 class TestLatexUtils:

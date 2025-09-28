@@ -82,10 +82,10 @@ function App() {
         return <Dashboard />;
       case "practice":
         return <Practice />;
-      case "progress":
-        return <Progress />;
+      // case "progress":
+      //   return <Progress />;
       default:
-        return <Practice />;
+        return <Dashboard />;
     }
   };
 
