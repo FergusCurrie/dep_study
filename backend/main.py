@@ -3,7 +3,7 @@ from database import Due as DueModel
 from database import Problem as ProblemModel
 from database import Review as ReviewModel
 from database import create_tables, get_db
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -14,7 +14,7 @@ from schemas import Problem, ProblemCreate, ProblemWithReviews, Review, ReviewCr
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from src.problems.dispatch import dispatch_problem
-from src.scheduling.simple import get_next_review_date
+from src.scheduling.dispatch import dispatch_scheduler
 from typing import List
 
 app = FastAPI()
@@ -78,6 +78,7 @@ def read_problems(db: Session = Depends(get_db)):
     )
     problems_and_due = query.all() 
     if len(problems_and_due) == 0:
+        logger.error('No problems found')
         return {}
     _, problem = problems_and_due[0]
     logger.info(f'Read problems! - found {len(problems_and_due)}, select {problem.name}')
@@ -117,7 +118,8 @@ def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
     # find new due date 
     try:
         all_reviews = db.query(ReviewModel).filter(ReviewModel.problem_id == review.problem_id).all()
-        next_review_date = get_next_review_date(all_reviews)
+        scheduler = dispatch_scheduler("spaced_repetition")
+        next_review_date = scheduler.get_next_review_date(all_reviews)
 
         # Delete old due date 
         current_due = db.query(DueModel).filter(DueModel.problem_id == review.problem_id).first()
@@ -154,6 +156,127 @@ def delete_review(review_id: int, db: Session = Depends(get_db)):
     db.delete(review)
     db.commit()
     return {"message": "Review deleted"}
+
+# Analytics endpoint
+@app.get("/api/analytics/")
+def get_analytics(db: Session = Depends(get_db)):
+    """Get comprehensive analytics data for visualization."""
+    
+    # Get all problems with their due dates
+    problems_query = (
+        db.query(ProblemModel, DueModel)
+        .outerjoin(DueModel, ProblemModel.id == DueModel.problem_id)
+        .all()
+    )
+    
+    # Get all reviews
+    all_reviews = db.query(ReviewModel).all()
+    
+    # Calculate analytics
+    total_problems = len(problems_query)
+    problems_due_today = 0
+    problems_due_this_week = 0
+    problems_due_this_month = 0
+    problems_overdue = 0
+    
+    # Group reviews by problem
+    reviews_by_problem = {}
+    for review in all_reviews:
+        if review.problem_id not in reviews_by_problem:
+            reviews_by_problem[review.problem_id] = []
+        reviews_by_problem[review.problem_id].append(review)
+    
+    # Calculate ease factors and intervals for each problem
+    problem_analytics = []
+    scheduler = dispatch_scheduler("spaced_repetition")
+    
+    for problem, due in problems_query:
+        problem_reviews = reviews_by_problem.get(problem.id, [])
+        
+        # Calculate next review date using scheduler
+        if problem_reviews:
+            next_review_date = scheduler.get_next_review_date(problem_reviews)
+        else:
+            next_review_date = datetime.now() + timedelta(days=1)
+        
+        # Calculate ease factor (simplified)
+        if len(problem_reviews) > 0:
+            recent_reviews = problem_reviews[-10:] if len(problem_reviews) > 10 else problem_reviews
+            correct_count = sum(1 for r in recent_reviews if r.correct)
+            ease_factor = 2.5 + (correct_count - len(recent_reviews) + correct_count) * 0.1
+            ease_factor = max(1.3, min(3.0, ease_factor))
+        else:
+            ease_factor = 2.5
+        
+        # Calculate current interval
+        if len(problem_reviews) == 0:
+            current_interval = 1
+        elif len(problem_reviews) == 1 and problem_reviews[0].correct:
+            current_interval = 6
+        else:
+            # Simplified interval calculation
+            correct_streak = 0
+            for review in reversed(problem_reviews):
+                if review.correct:
+                    correct_streak += 1
+                else:
+                    break
+            
+            if correct_streak <= 1:
+                current_interval = 6 if correct_streak == 1 else 1
+            else:
+                current_interval = min(365, int(6 * (ease_factor ** (correct_streak - 2))))
+        
+        # Check due status
+        now = datetime.now()
+        if due and due.due_date:
+            days_until_due = (due.due_date - now).days
+            if days_until_due < 0:
+                problems_overdue += 1
+            elif days_until_due == 0:
+                problems_due_today += 1
+            elif days_until_due <= 7:
+                problems_due_this_week += 1
+            elif days_until_due <= 30:
+                problems_due_this_month += 1
+        else:
+            # No due date set, consider it due today
+            problems_due_today += 1
+        
+        problem_analytics.append({
+            "problem_id": problem.id,
+            "problem_name": problem.name,
+            "total_reviews": len(problem_reviews),
+            "correct_reviews": sum(1 for r in problem_reviews if r.correct),
+            "ease_factor": round(ease_factor, 2),
+            "current_interval": current_interval,
+            "next_review_date": next_review_date.isoformat(),
+            "due_date": due.due_date.isoformat() if due and due.due_date else None,
+            "days_until_due": (due.due_date - now).days if due and due.due_date else 0
+        })
+    
+    # Calculate overall statistics
+    total_reviews = len(all_reviews)
+    correct_reviews = sum(1 for r in all_reviews if r.correct)
+    overall_accuracy = (correct_reviews / total_reviews * 100) if total_reviews > 0 else 0
+    
+    # Calculate average ease factor
+    avg_ease_factor = sum(p["ease_factor"] for p in problem_analytics) / len(problem_analytics) if problem_analytics else 2.5
+    
+    return {
+        "summary": {
+            "total_problems": total_problems,
+            "total_reviews": total_reviews,
+            "overall_accuracy": round(overall_accuracy, 1),
+            "average_ease_factor": round(avg_ease_factor, 2),
+            "problems_due_today": problems_due_today,
+            "problems_due_this_week": problems_due_this_week,
+            "problems_due_this_month": problems_due_this_month,
+            "problems_overdue": problems_overdue
+        },
+        "problems": problem_analytics,
+        "generated_at": datetime.now().isoformat()
+    }
 
 
 # @app.get("/")

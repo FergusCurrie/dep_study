@@ -2,7 +2,11 @@ frontend/node_modules/
 frontend/src/test.tsx
 frontend/dist
 
+# Python cache directories
+**/__pycache__/
 __pycache__/
+
 backend/dist
-backend/__pycache__
 backend/.venv
+
+backend/src/problems/__pycache__

@@ -1,39 +1,43 @@
 import random
-from jinja2 import Environment, FileSystemLoader
+from .problem_base import Problem
+from .utils.options import generate_options
+from .utils.template import render_template
 
 
-def _solve(flop_per_thread, memory_access_size_bits, memory_access_per_thread):
-    bytes_per_thread = (memory_access_size_bits / 8) * memory_access_per_thread
-    return round(flop_per_thread / bytes_per_thread, 2)
-
-def generate_problem():
-    flop_per_thread = random.randint(5,30)
-    memory_access_per_thread = random.randint(5,30)
-    memory_access_size_bits = random.choice([8, 16, 32, 64, 128, 256])
-    
+class ArithmeticIntensity(Problem):
+    def generate_problem(self):
+        flop_per_thread = random.randint(5,30)
+        memory_access_per_thread = random.randint(5,30)
+        memory_access_size_bits = random.choice([8, 16, 32, 64, 128, 256])
+        
 
 
-    env = Environment(loader=FileSystemLoader('.'))
-    template = env.get_template('problem_templates/arithmetic_intensity.j2')
-    data = {
-        'flop_per_thread': flop_per_thread,
-        'memory_access_per_thread' : memory_access_per_thread,
-        'memory_access_size_bits' : memory_access_size_bits
+        data = {
+            'flop_per_thread': flop_per_thread,
+            'memory_access_per_thread' : memory_access_per_thread,
+            'memory_access_size_bits' : memory_access_size_bits
 
-    }
-    markdown_question = template.render(data)
-    answer = _solve(flop_per_thread, memory_access_size_bits, memory_access_per_thread)
+        }
+        markdown_question = render_template('problem_templates/arithmetic_intensity.j2', data)
+        answer = self.solve(flop_per_thread, memory_access_size_bits, memory_access_per_thread)
+        
+        options, correct_index = generate_options(answer)
 
-    return {
-        'question': markdown_question,
-        'options': [f"{answer}", f"{answer+1}", f"{answer-1}", f"{answer+2}"],
-        'correct': 0
-    }
+        return { # TODO: make data model 
+            'question': markdown_question,
+            'options': options,
+            'correct': correct_index
+        }
+
+    def solve(self, flop_per_thread, memory_access_size_bits, memory_access_per_thread):
+        bytes_per_thread = (memory_access_size_bits / 8) * memory_access_per_thread
+        return round(flop_per_thread / bytes_per_thread, 2)
+        #return _solve(problem['flop_per_thread'], problem['memory_access_size_bits'], problem['memory_access_per_thread'])
 
 
 
 if __name__ == "__main__":
     
-    prob = generate_problem()
+    prob = ArithmeticIntensity().generate_problem()
     print(prob)
 
