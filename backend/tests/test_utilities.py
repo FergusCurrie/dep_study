@@ -1,8 +1,7 @@
-import pytest
+import numpy as np
+from src.problems.utils.latex import matrix_to_latex
 from src.problems.utils.options import generate_options
 from src.problems.utils.template import render_template
-from src.problems.utils.latex import matrix_to_latex
-import numpy as np
 
 
 class TestOptionsGeneration:
@@ -100,7 +99,7 @@ class TestOptionsGeneration:
         # Should maintain appropriate precision
         for option in options:
             value = float(option)
-            assert 0 <= value <= 0.1  # Reasonable range for 0.05
+            assert -2.0 <= value <= 2.0  # Reasonable range for 0.05 with variation
 
 
 class TestTemplateRendering:

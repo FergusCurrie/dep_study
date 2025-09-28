@@ -12,11 +12,17 @@ dependencies = [
     "numpy>=2.2.6",
     "poethepoet>=0.37.0",
     "pydantic>=2.11.9",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.24.0",
     "sqlalchemy>=2.0.43",
 ]
 
 [tool.poe.tasks]
 run = "uv run fastapi dev main.py"
+test = "uv run pytest"
+test-verbose = "uv run pytest -v"
+test-coverage = "uv run pytest --cov=src --cov-report=html"
 
  
 [tool.ruff]

@@ -31,6 +31,8 @@ class ArithmeticIntensity(Problem):
 
     def solve(self, flop_per_thread, memory_access_size_bits, memory_access_per_thread):
         bytes_per_thread = (memory_access_size_bits / 8) * memory_access_per_thread
+        if bytes_per_thread == 0:
+            return float('inf')
         return round(flop_per_thread / bytes_per_thread, 2)
         #return _solve(problem['flop_per_thread'], problem['memory_access_size_bits'], problem['memory_access_per_thread'])
 

@@ -1,9 +1,9 @@
 import pytest
+from database import Base, get_db
 from fastapi.testclient import TestClient
+from main import app
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database import Base, get_db
-from main import app
 
 # Create test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -12,6 +12,13 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 # Create tables
 Base.metadata.create_all(bind=engine)
+
+# Clean up test database before each test
+@pytest.fixture(autouse=True)
+def cleanup_database():
+    # Clean up before each test
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
 def override_get_db():
     try:

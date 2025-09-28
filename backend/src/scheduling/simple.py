@@ -40,5 +40,5 @@ class SimpleScheduler(Scheduler):
                 timer += 1
 
         # calculate that day 
-        latest_review_day = min([x.created_date for x in reviews])
+        latest_review_day = max([x.created_date for x in reviews])
         return latest_review_day + timedelta(days=timer + 1)

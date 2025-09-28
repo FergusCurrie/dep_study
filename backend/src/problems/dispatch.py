@@ -17,4 +17,5 @@ def dispatch_problem(name: str):
         return Roofline().generate_problem()
     if name == "rec_sys_matrix_fact":
         return RecSysMatrixFact().generate_problem()
+    raise ValueError(f"Unknown problem type: {name}")
 

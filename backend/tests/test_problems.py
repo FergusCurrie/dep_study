@@ -1,10 +1,10 @@
 import pytest
 from src.problems.arithmetic_intensity import ArithmeticIntensity
 from src.problems.bytes2bits import Bytes2Bits
+from src.problems.dispatch import dispatch_problem
 from src.problems.ram_bandwidth import RamBandwidth
 from src.problems.rec_sys_matrix_fact import RecSysMatrixFact
 from src.problems.roofline import Roofline
-from src.problems.dispatch import dispatch_problem
 
 
 class TestArithmeticIntensity:
@@ -159,5 +159,5 @@ class TestProblemDispatch:
 
     def test_dispatch_invalid_problem_type(self):
         """Test that invalid problem types raise appropriate errors."""
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             dispatch_problem("invalid_problem_type")
