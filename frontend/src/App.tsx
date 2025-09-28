@@ -22,6 +22,7 @@ import {
 } from "@mui/icons-material";
 import Practice from "./page/Practice.tsx";
 import Progress from "./page/Progress.tsx";
+import Dashboard from "./page/Dashboard.tsx";
 
 function App() {
   const [selectedTab, setSelectedTab] = useState("practice");
@@ -45,20 +46,20 @@ function App() {
       <List>
         {menuItems.map((item) => (
           <ListItem
-            button
             key={item.id}
-            selected={selectedTab === item.id}
             onClick={() => {
               setSelectedTab(item.id);
             }}
-            // sx={{
-            //   borderRadius: 1,
-            //   mb: 0.5,
-            //   "&.Mui-selected": {
-            //     bgcolor: "primary.light",
-            //     color: "primary.contrastText",
-            //   },
-            // }}
+            sx={{
+              borderRadius: 1,
+              mb: 0.5,
+              cursor: 'pointer',
+              bgcolor: selectedTab === item.id ? "primary.light" : "transparent",
+              color: selectedTab === item.id ? "primary.contrastText" : "inherit",
+              "&:hover": {
+                bgcolor: selectedTab === item.id ? "primary.light" : "action.hover",
+              },
+            }}
           >
             <ListItemIcon
               sx={{
@@ -78,13 +79,13 @@ function App() {
   const renderContent = () => {
     switch (selectedTab) {
       case "dashboard":
-        return <Typography variant="h1">Place holder for dashboard</Typography>;
+        return <Dashboard />;
       case "practice":
         return <Practice />;
-      case "progress":
-        return <Progress />;
+      // case "progress":
+      //   return <Progress />;
       default:
-        return <Practice />;
+        return <Dashboard />;
     }
   };
 

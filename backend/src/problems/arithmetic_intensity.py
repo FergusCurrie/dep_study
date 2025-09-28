@@ -1,39 +1,71 @@
 import random
-from jinja2 import Environment, FileSystemLoader
+from .problem_base import Problem
+from .utils.options import generate_options
 
 
-def _solve(flop_per_thread, memory_access_size_bits, memory_access_per_thread):
-    bytes_per_thread = (memory_access_size_bits / 8) * memory_access_per_thread
-    return round(flop_per_thread / bytes_per_thread, 2)
+class ArithmeticIntensity(Problem):
+    def generate_problem(self):
+        flop_per_thread = random.randint(5,30)
+        memory_access_per_thread = random.randint(5,30)
+        memory_access_size_bits = random.choice([8, 16, 32, 64, 128, 256])
+        
+        problem_data = {
+            'flop_per_thread': flop_per_thread,
+            'memory_access_per_thread' : memory_access_per_thread,
+            'memory_access_size_bits' : memory_access_size_bits
+        }
+        
+        # Generate question using template text with string interpolation
+        markdown_question = f"""# Arithmetic intensity
 
-def generate_problem():
-    flop_per_thread = random.randint(5,30)
-    memory_access_per_thread = random.randint(5,30)
-    memory_access_size_bits = random.choice([8, 16, 32, 64, 128, 256])
+Calculate arithmetic intensity for a kernel with {flop_per_thread} flops per thread, {memory_access_per_thread} memory accesses per thread and access size of {memory_access_size_bits} bits. Round to 2dp:"""
+        answer = self.solve(flop_per_thread, memory_access_size_bits, memory_access_per_thread)
+        solution_explanation = self.get_solution_explanation(problem_data, answer)
+        
+        options, correct_index = generate_options(answer)
+
+        return {
+            'question': markdown_question,
+            'options': options,
+            'correct': correct_index,
+            'solution_explanation': solution_explanation
+        }
+
+    def solve(self, flop_per_thread, memory_access_size_bits, memory_access_per_thread):
+        bytes_per_thread = (memory_access_size_bits / 8) * memory_access_per_thread
+        if bytes_per_thread == 0:
+            return float('inf')
+        return round(flop_per_thread / bytes_per_thread, 2)
     
+    def get_solution_explanation(self, problem_data, answer):
+        flop_per_thread = problem_data['flop_per_thread']
+        memory_access_per_thread = problem_data['memory_access_per_thread']
+        memory_access_size_bits = problem_data['memory_access_size_bits']
+        
+        return f"""## Solution Explanation
 
+**Given:**
+- FLOPS per thread: {flop_per_thread}
+- Memory accesses per thread: {memory_access_per_thread}
+- Memory access size: {memory_access_size_bits} bits
 
-    env = Environment(loader=FileSystemLoader('.'))
-    template = env.get_template('problem_templates/arithmetic_intensity.j2')
-    data = {
-        'flop_per_thread': flop_per_thread,
-        'memory_access_per_thread' : memory_access_per_thread,
-        'memory_access_size_bits' : memory_access_size_bits
+**Step 1: Convert memory access size to bytes**
+Memory access size in bytes = {memory_access_size_bits} bits ÷ 8 = {memory_access_size_bits / 8} bytes
 
-    }
-    markdown_question = template.render(data)
-    answer = _solve(flop_per_thread, memory_access_size_bits, memory_access_per_thread)
+**Step 2: Calculate total bytes accessed per thread**
+Total bytes per thread = {memory_access_size_bits / 8} bytes × {memory_access_per_thread} accesses = {(memory_access_size_bits / 8) * memory_access_per_thread} bytes
 
-    return {
-        'question': markdown_question,
-        'options': [f"{answer}", f"{answer+1}", f"{answer-1}", f"{answer+2}"],
-        'correct': 0
-    }
+**Step 3: Calculate arithmetic intensity**
+Arithmetic intensity = FLOPS per thread ÷ Bytes per thread
+Arithmetic intensity = {flop_per_thread} ÷ {(memory_access_size_bits / 8) * memory_access_per_thread} = {answer}
+
+**Answer:** {answer} FLOPS/byte
+
+**Note:** Arithmetic intensity measures the ratio of floating-point operations to memory bandwidth. Higher values indicate compute-bound kernels, while lower values indicate memory-bound kernels."""
 
 
 
 if __name__ == "__main__":
-    
-    prob = generate_problem()
+    prob = ArithmeticIntensity().generate_problem()
     print(prob)
 

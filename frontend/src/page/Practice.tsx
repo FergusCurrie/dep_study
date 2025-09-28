@@ -8,6 +8,7 @@ interface Problem {
   question: string;
   options: string[];
   correct: number;
+  solution_explanation?: string;
 }
 
 function Practice() {
@@ -89,12 +90,20 @@ function Practice() {
               </Box>
               {showResult && (
                 <Box sx={{ mt: 2, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ mb: 2 }}>
                     {selectedAnswer === currentProblem.correct
                       ? "🎉 Correct! Well done!"
                       : "❌ Incorrect. The correct answer is: " +
                         currentProblem.options[currentProblem.correct]}
                   </Typography>
+                  
+                  {currentProblem.solution_explanation && (
+                    <Box sx={{ mt: 2 }}>
+                      <MarkdownMathRenderer
+                        content={currentProblem.solution_explanation}
+                      />
+                    </Box>
+                  )}
                 </Box>
               )}
             </Box>
