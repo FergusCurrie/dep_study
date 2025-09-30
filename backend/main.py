@@ -36,6 +36,7 @@ logger.info(static_dir)
 
 # Mount static assets (JS, CSS, images, etc.) with cache headers
 if static_dir.exists():
+    logger.info(f'Mounting static assets from {static_dir}')
     app.mount(
         "/assets", 
         StaticFiles(directory=static_dir / "assets"), 
@@ -433,5 +434,13 @@ async def catch_all_post(full_path: str):
     raise HTTPException(status_code=404, detail="Not found")
 
 if __name__ == "__main__":
+    import os
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    env = (
+        os.getenv("BACKEND_ENV")
+        or os.getenv("APP_ENV")
+        or os.getenv("ENV")
+        or "dev"
+    ).lower()
+    port = 9897 if env in {"prd", "prod", "production"} else 8000
+    uvicorn.run(app, host="0.0.0.0", port=port)

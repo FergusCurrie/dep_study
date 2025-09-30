@@ -20,3 +20,5 @@
 - added page to review suspended 
 - added tags
 - added browse page 
+- added prd/dev database split + env to configure 
+- added tailscale dns for prd 

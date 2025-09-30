@@ -19,7 +19,8 @@ RUN uv sync
 
 # Get fronend 
 COPY --from=frontend-build /app/frontend/dist ./dist
-EXPOSE 8000
+# EXPOSE 8000
+EXPOSE 9897
 
 
 CMD ["uv", "run", "main.py"]

@@ -16,7 +16,7 @@ The application supports different API endpoints for development and production 
 - **Backend**: `cd backend && uv run poe run`
 
 ### Production (Docker)
-- **Build**: `docker-compose up --build`
+- **Build**: `docker-compose up -d`
 - **Custom URL**: `docker build --build-arg VITE_API_BASE_URL=http://your-url/ .`
 
 ### Environment Variables
