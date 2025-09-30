@@ -21,16 +21,19 @@ import {
   Functions,
 } from "@mui/icons-material";
 import Practice from "./page/Practice.tsx";
-import Progress from "./page/Progress.tsx";
 import Dashboard from "./page/Dashboard.tsx";
+import Browse from "./page/Browse.tsx";
 
 function App() {
-  const [selectedTab, setSelectedTab] = useState("practice");
+  const [selectedTab, setSelectedTab] = useState("dashboard");
 
   const menuItems = [
-    { id: "practice", label: "Practice", icon: <Functions /> },
     { id: "dashboard", label: "Dashboard", icon: <Assessment /> },
-    { id: "progress", label: "Progress", icon: <TrendingUp /> },
+    { id: "practice", label: "Practice", icon: <Functions /> },
+    
+    // { id: "progress", label: "Progress", icon: <TrendingUp /> },
+    // { id: "suspended", label: "Suspended", icon: <TrendingUp /> },
+    { id: "browse", label: "Browse", icon: <TrendingUp /> },
   ];
 
   const Sidebar = () => (
@@ -82,6 +85,10 @@ function App() {
         return <Dashboard />;
       case "practice":
         return <Practice />;
+      // case "suspended":
+      //   return <Suspended />;
+      case "browse":
+        return <Browse />;
       // case "progress":
       //   return <Progress />;
       default:

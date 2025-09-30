@@ -21,10 +21,13 @@ class Problem(Base):
     id = Column(Integer, primary_key=True, index=True)
     created_date = Column(DateTime, default=datetime.utcnow)
     name = Column(String, index=True)
+    suspended = Column(Boolean, default=False, nullable=False)
+    suspend_reason = Column(String, nullable=True)
     
     # Relationship to reviews
     reviews = relationship("Review", back_populates="problem")
     due = relationship("Due", back_populates="problem")
+    tags = relationship("Tag", secondary="problem_tags", back_populates="problems")
 
 class Review(Base):
     __tablename__ = "reviews"
@@ -46,6 +49,21 @@ class Due(Base):
     
     # Relationship to problem
     problem = relationship("Problem", back_populates="due")
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+
+    problems = relationship("Problem", secondary="problem_tags", back_populates="tags")
+
+class ProblemTag(Base):
+    __tablename__ = "problem_tags"
+
+    id = Column(Integer, primary_key=True, index=True)
+    problem_id = Column(Integer, ForeignKey("problems.id"), index=True)
+    tag_id = Column(Integer, ForeignKey("tags.id"), index=True)
 
 # Create tables
 def create_tables():

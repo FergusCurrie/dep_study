@@ -2,7 +2,8 @@
 from database import Due as DueModel
 from database import Problem as ProblemModel
 from database import Review as ReviewModel
-from database import create_tables, get_db
+from database import Tag as TagModel
+from database import create_tables, engine, get_db
 from datetime import datetime, timedelta
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +11,17 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from pathlib import Path
-from schemas import Problem, ProblemCreate, ProblemWithReviews, Review, ReviewCreate
+from schemas import (
+    Problem,
+    ProblemCreate,
+    ProblemSuspendRequest,
+    ProblemTagUpdate,
+    ProblemWithReviews,
+    ProblemWithTagObjects,
+    Review,
+    ReviewCreate,
+    Tag,
+)
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from src.problems.dispatch import dispatch_problem
@@ -54,6 +65,22 @@ app.add_middleware(
 @app.on_event("startup")
 def startup_event():
     create_tables()
+    # Lightweight migration for SQLite: add suspended columns if missing
+    try:
+        with engine.connect() as conn:
+            cols = conn.exec_driver_sql("PRAGMA table_info('problems')").fetchall()
+            existing_cols = {row[1] for row in cols}
+            if 'suspended' not in existing_cols:
+                conn.exec_driver_sql("ALTER TABLE problems ADD COLUMN suspended BOOLEAN NOT NULL DEFAULT 0")
+                logger.info("Added 'suspended' column to problems table")
+            if 'suspend_reason' not in existing_cols:
+                conn.exec_driver_sql("ALTER TABLE problems ADD COLUMN suspend_reason TEXT NULL")
+                logger.info("Added 'suspend_reason' column to problems table")
+            # create tags tables if not exist
+            conn.exec_driver_sql("CREATE TABLE IF NOT EXISTS tags (id INTEGER PRIMARY KEY, name VARCHAR, UNIQUE(name))")
+            conn.exec_driver_sql("CREATE TABLE IF NOT EXISTS problem_tags (id INTEGER PRIMARY KEY, problem_id INTEGER, tag_id INTEGER)")
+    except Exception as e:
+        logger.error(f"Migration check failed: {e}")
 
 # Problem endpoints
 @app.post("/api/problems/", response_model=Problem)
@@ -70,6 +97,7 @@ def read_problems(db: Session = Depends(get_db)):
         db.query(DueModel, ProblemModel)
         .outerjoin(DueModel, ProblemModel.id == DueModel.problem_id)
         .filter(
+            ProblemModel.suspended == False,
             or_(
                 DueModel.due_date == None,          
                 DueModel.due_date <= datetime.now()     
@@ -78,13 +106,92 @@ def read_problems(db: Session = Depends(get_db)):
     )
     problems_and_due = query.all() 
     if len(problems_and_due) == 0:
-        logger.error('No problems found')
+        # logger.error('No problems found')
         return {}
     _, problem = problems_and_due[0]
     logger.info(f'Read problems! - found {len(problems_and_due)}, select {problem.name}')
     problem_data = dispatch_problem(problem.name)
     problem_data['id'] = problem.id
+    try:
+        problem_data['tags'] = [t.name for t in problem.tags] if hasattr(problem, 'tags') else []
+    except Exception:
+        problem_data['tags'] = []
     return problem_data
+
+@app.post("/api/problems/{problem_id}/suspend", response_model=Problem)
+def suspend_problem(problem_id: int, payload: ProblemSuspendRequest, db: Session = Depends(get_db)):
+    problem = db.query(ProblemModel).filter(ProblemModel.id == problem_id).first()
+    if problem is None:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    problem.suspended = True
+    problem.suspend_reason = payload.reason
+    db.commit()
+    db.refresh(problem)
+    return problem
+@app.get("/api/problems/{problem_id}/demo")
+def demo_problem(problem_id: int, db: Session = Depends(get_db)):
+    problem = db.query(ProblemModel).filter(ProblemModel.id == problem_id).first()
+    if problem is None:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    data = dispatch_problem(problem.name)
+    data['id'] = problem.id
+    return data
+@app.get("/api/problems/all", response_model=List[ProblemWithTagObjects])
+def list_all_problems(db: Session = Depends(get_db)):
+    problems = db.query(ProblemModel).all()
+    result = []
+    for p in problems:
+        result.append(p)
+    return result
+
+@app.get("/api/tags", response_model=List[Tag])
+def list_tags(db: Session = Depends(get_db)):
+    return db.query(TagModel).all()
+
+@app.post("/api/problems/{problem_id}/tags", response_model=ProblemWithTagObjects)
+def add_tag_to_problem(problem_id: int, payload: ProblemTagUpdate, db: Session = Depends(get_db)):
+    problem = db.query(ProblemModel).filter(ProblemModel.id == problem_id).first()
+    if problem is None:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    tag = db.query(TagModel).filter(TagModel.name == payload.tag_name).first()
+    if tag is None:
+        tag = TagModel(name=payload.tag_name)
+        db.add(tag)
+        db.commit()
+        db.refresh(tag)
+    if tag not in problem.tags:
+        problem.tags.append(tag)
+    db.commit()
+    db.refresh(problem)
+    return problem
+
+@app.delete("/api/problems/{problem_id}/tags", response_model=ProblemWithTagObjects)
+def remove_tag_from_problem(problem_id: int, payload: ProblemTagUpdate, db: Session = Depends(get_db)):
+    problem = db.query(ProblemModel).filter(ProblemModel.id == problem_id).first()
+    if problem is None:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    tag = db.query(TagModel).filter(TagModel.name == payload.tag_name).first()
+    if tag and tag in problem.tags:
+        problem.tags.remove(tag)
+        db.commit()
+        db.refresh(problem)
+    return problem
+
+@app.get("/api/problems/suspended", response_model=List[Problem])
+def list_suspended_problems(db: Session = Depends(get_db)):
+    problems = db.query(ProblemModel).filter(ProblemModel.suspended == True).all()
+    return problems
+
+@app.post("/api/problems/{problem_id}/unsuspend", response_model=Problem)
+def unsuspend_problem(problem_id: int, db: Session = Depends(get_db)):
+    problem = db.query(ProblemModel).filter(ProblemModel.id == problem_id).first()
+    if problem is None:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    problem.suspended = False
+    problem.suspend_reason = None
+    db.commit()
+    db.refresh(problem)
+    return problem
 
 @app.get("/api/problems/{problem_id}", response_model=ProblemWithReviews)
 def read_problem(problem_id: int, db: Session = Depends(get_db)):
@@ -314,6 +421,16 @@ async def serve_react_app(full_path: str):
         )
     
     raise HTTPException(status_code=404, detail="React app not found")
+
+@app.post("/{full_path:path}")
+async def catch_all_post(full_path: str):
+    """
+    Ensure non-API POST requests don't interfere with API routing.
+    Return 404 for any POST that isn't an explicit API route.
+    """
+    if full_path.startswith("api"):
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+    raise HTTPException(status_code=404, detail="Not found")
 
 if __name__ == "__main__":
     import uvicorn
