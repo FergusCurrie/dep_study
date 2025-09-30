@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Typography, Button, Box } from "@mui/material";
+import { Typography, Button, Box, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material";
 import MarkdownMathRenderer from "../components/MarkdownMathRenderer.tsx";
 import api from "../api";
 
@@ -17,6 +17,8 @@ function Practice() {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [problemsAttempted, setProblemsAttempted] = useState(0);
+  const [suspendOpen, setSuspendOpen] = useState(false);
+  const [suspendReason, setSuspendReason] = useState("");
 
   const getQuestion = async () => {
     const response = await api.get("/api/problems/");
@@ -51,6 +53,22 @@ function Practice() {
     getQuestion();
     setSelectedAnswer(-1);
     setShowResult(false);
+  };
+
+  const openSuspend = () => {
+    setSuspendOpen(true);
+  };
+
+  const closeSuspend = () => {
+    setSuspendOpen(false);
+    setSuspendReason("");
+  };
+
+  const suspendProblem = async () => {
+    if (!currentProblem) return;
+    await api.post(`/api/problems/${currentProblem.id}/suspend`, { reason: suspendReason });
+    closeSuspend();
+    nextProblem();
   };
 
   return (
@@ -109,7 +127,7 @@ function Practice() {
             </Box>
           )}
         </Box>
-        <Box>
+        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
           {!showResult ? (
             <Button
               onClick={handleAnswerSubmit}
@@ -123,7 +141,34 @@ function Practice() {
               Next Problem
             </Button>
           )}
+          {currentProblem && (
+            <Button variant="outlined" color="warning" onClick={openSuspend}>
+              Suspend
+            </Button>
+          )}
         </Box>
+
+        <Dialog open={suspendOpen} onClose={closeSuspend} fullWidth maxWidth="sm">
+          <DialogTitle>Suspend this problem</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              Add a quick note on what is wrong with this problem (optional).
+            </Typography>
+            <TextField
+              autoFocus
+              multiline
+              minRows={3}
+              fullWidth
+              placeholder="Reason or notes"
+              value={suspendReason}
+              onChange={(e) => setSuspendReason(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeSuspend}>Cancel</Button>
+            <Button onClick={suspendProblem} variant="contained" color="warning">Suspend</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </>
   );

@@ -21,6 +21,8 @@ class Problem(Base):
     id = Column(Integer, primary_key=True, index=True)
     created_date = Column(DateTime, default=datetime.utcnow)
     name = Column(String, index=True)
+    suspended = Column(Boolean, default=False, nullable=False)
+    suspend_reason = Column(String, nullable=True)
     
     # Relationship to reviews
     reviews = relationship("Review", back_populates="problem")

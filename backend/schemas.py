@@ -13,6 +13,8 @@ class ProblemCreate(ProblemBase):
 class Problem(ProblemBase):
     id: int
     created_date: datetime
+    suspended: bool = False
+    suspend_reason: str | None = None
     
     class Config:
         from_attributes = True
@@ -35,6 +37,9 @@ class Review(ReviewBase):
 
 class ProblemWithReviews(Problem):
     reviews: List[Review] = []
+
+class ProblemSuspendRequest(BaseModel):
+    reason: str | None = None
 
 ### due 
 class DueBase(BaseModel):
