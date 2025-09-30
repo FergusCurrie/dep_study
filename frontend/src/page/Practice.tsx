@@ -17,13 +17,30 @@ function Practice() {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [problemsAttempted, setProblemsAttempted] = useState(0);
+  const [noDue, setNoDue] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [suspendReason, setSuspendReason] = useState("");
 
   const getQuestion = async () => {
-    const response = await api.get("/api/problems/");
-    console.log(response);
-    setCurrentProblem(response.data);
+    try {
+      const response = await api.get("/api/problems/");
+      const data = response.data;
+      if (
+        data &&
+        typeof data.id === "number" &&
+        typeof data.question === "string" &&
+        Array.isArray(data.options)
+      ) {
+        setCurrentProblem(data);
+        setNoDue(false);
+      } else {
+        setCurrentProblem(null);
+        setNoDue(true);
+      }
+    } catch (e) {
+      setCurrentProblem(null);
+      setNoDue(true);
+    }
   };
 
   const addReview = async (isCorrect: boolean) => {
@@ -75,7 +92,7 @@ function Practice() {
     <>
       <Box>
         <Box>
-          {currentProblem && (
+          {currentProblem && Array.isArray(currentProblem.options) && (
             <Box>
               <MarkdownMathRenderer
                 content={currentProblem.question}
@@ -126,13 +143,21 @@ function Practice() {
               )}
             </Box>
           )}
+          {noDue && (
+            <Box sx={{ p: 2, mt: 2 }}>
+              <Typography variant="h6">No problems due</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                All problems are either not due yet or suspended. Check back later.
+              </Typography>
+            </Box>
+          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
           {!showResult ? (
             <Button
               onClick={handleAnswerSubmit}
               variant="contained"
-              disabled={selectedAnswer === null}
+              disabled={selectedAnswer === -1 || !currentProblem}
             >
               Submit Answer
             </Button>

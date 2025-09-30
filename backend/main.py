@@ -92,7 +92,7 @@ def read_problems(db: Session = Depends(get_db)):
     )
     problems_and_due = query.all() 
     if len(problems_and_due) == 0:
-        logger.error('No problems found')
+        # logger.error('No problems found')
         return {}
     _, problem = problems_and_due[0]
     logger.info(f'Read problems! - found {len(problems_and_due)}, select {problem.name}')
