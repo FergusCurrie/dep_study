@@ -131,9 +131,17 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Dashboard
-      </Typography>
+      <Box display="flex" alignItems="center" gap={1}>
+        <Typography variant="h4" gutterBottom>
+          Dashboard
+        </Typography>
+        <Chip
+          size="small"
+          label={import.meta.env.PROD ? 'prd' : 'dev'}
+          color={import.meta.env.PROD ? 'primary' : 'default'}
+          sx={{ ml: 1 }}
+        />
+      </Box>
       <Typography variant="body2" color="text.secondary" gutterBottom>
         Last updated: {formatDate(data.generated_at)}
       </Typography>
