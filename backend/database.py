@@ -18,6 +18,9 @@ _env = (
     or "dev"
 ).lower()
 
+from loguru import logger
+
+logger.error(f'DATABASE_URL: {_explicit_db_url} _env: {_env}')
 if _explicit_db_url:
     SQLALCHEMY_DATABASE_URL = _explicit_db_url
 else:
@@ -30,6 +33,9 @@ else:
     }
     _db_file = _env_to_filename.get(_env, "dev.db")
     SQLALCHEMY_DATABASE_URL = f"sqlite:///./{_db_file}"
+
+logger.error(f'SQLALCHEMY_DATABASE_URL: {SQLALCHEMY_DATABASE_URL}')
+
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, 
