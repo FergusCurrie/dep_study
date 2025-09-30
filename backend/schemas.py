@@ -15,6 +15,7 @@ class Problem(ProblemBase):
     created_date: datetime
     suspended: bool = False
     suspend_reason: str | None = None
+    tags: List[str] = []
     
     class Config:
         from_attributes = True
@@ -37,6 +38,26 @@ class Review(ReviewBase):
 
 class ProblemWithReviews(Problem):
     reviews: List[Review] = []
+class Tag(BaseModel):
+    id: int
+    name: str
+    class Config:
+        from_attributes = True
+
+class ProblemWithTagObjects(ProblemBase):
+    id: int
+    created_date: datetime
+    suspended: bool
+    suspend_reason: str | None
+    tags: List[Tag] = []
+    class Config:
+        from_attributes = True
+
+class TagCreate(BaseModel):
+    name: str
+
+class ProblemTagUpdate(BaseModel):
+    tag_name: str
 
 class ProblemSuspendRequest(BaseModel):
     reason: str | None = None

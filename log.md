@@ -13,3 +13,10 @@
 - dashboard
 - prod/dev env for ip. not quite wroking 
 
+# 30-09-25
+- added more problems 
+- added suspending
+- removed error for out of problems 
+- added page to review suspended 
+- added tags
+- added browse page 

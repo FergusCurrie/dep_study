@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Typography, Button, Box, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material";
+import { Typography, Button, Box, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Chip, Stack } from "@mui/material";
 import MarkdownMathRenderer from "../components/MarkdownMathRenderer.tsx";
 import api from "../api";
 
@@ -9,6 +9,7 @@ interface Problem {
   options: string[];
   correct: number;
   solution_explanation?: string;
+  tags?: string[];
 }
 
 function Practice() {
@@ -97,6 +98,14 @@ function Practice() {
               <MarkdownMathRenderer
                 content={currentProblem.question}
               ></MarkdownMathRenderer>
+
+              {currentProblem.tags && currentProblem.tags.length > 0 && (
+                <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }}>
+                  {currentProblem.tags.map((t, idx) => (
+                    <Chip key={idx} label={t} size="small" />
+                  ))}
+                </Stack>
+              )}
 
               <Box sx={{ mt: 2 }}>
                 {currentProblem.options.map((option, index) => (
