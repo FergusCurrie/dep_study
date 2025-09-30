@@ -1,11 +1,35 @@
 # database.py
+import os
 from datetime import datetime
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
 # Database setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./database.db"
+# Priority:
+# 1) Respect explicit DATABASE_URL if provided
+# 2) Otherwise select sqlite file based on env flag: BACKEND_ENV/APP_ENV/ENV
+#    dev -> dev.db, prd|prod|production -> prd.db, default -> dev.db
+_explicit_db_url = os.getenv("DATABASE_URL")
+_env = (
+    os.getenv("BACKEND_ENV")
+    or os.getenv("APP_ENV")
+    or os.getenv("ENV")
+    or "dev"
+).lower()
+
+if _explicit_db_url:
+    SQLALCHEMY_DATABASE_URL = _explicit_db_url
+else:
+    _env_to_filename = {
+        "dev": "dev.db",
+        "development": "dev.db",
+        "prd": "prd.db",
+        "prod": "prd.db",
+        "production": "prd.db",
+    }
+    _db_file = _env_to_filename.get(_env, "dev.db")
+    SQLALCHEMY_DATABASE_URL = f"sqlite:///./{_db_file}"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, 
